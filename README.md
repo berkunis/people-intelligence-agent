@@ -33,7 +33,7 @@ echo "ANTHROPIC_API_KEY=sk-ant-..." > .env
 uv run pia ask "What is active headcount by org?"
 ```
 
-**Real output (Claude Opus 4.7, ANALYST role, 5.5s, $0.11):**
+**Real output (Claude Haiku 4.5, ANALYST role, 2.6s, $0.004):**
 
 ```
 | org              | headcount |
@@ -137,7 +137,7 @@ uv run python -m evals.harness --only golden # 5 golden cases
 uv run python -m evals.harness --only redteam # 4 red-team cases
 ```
 
-Current: **9/9 passing** on live Claude Opus 4.7. Each case has pass/fail predicates for refusal state, required tool calls, answer content, SQL references, and latency/cost budgets.
+Current: **9/9 passing** on live Claude Haiku 4.5. Full suite runs in ~30s for ~$0.04 (swap `PIA_LLM_MODEL_CLAUDE=claude-opus-4-7` in `.env` for harder reasoning; ~27× the cost). Each case has pass/fail predicates for refusal state, required tool calls, answer content, SQL references, and latency/cost budgets.
 
 ## Where to look first
 
