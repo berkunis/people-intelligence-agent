@@ -2,33 +2,35 @@
   "uid": "pia-agent-overview",
   "title": "PIA · Agent Overview",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "editable": true,
   "refresh": "10s",
-  "time": { "from": "now-1h", "to": "now" },
+  "time": { "from": "now-6h", "to": "now" },
   "tags": ["pia", "ai", "governance"],
   "timezone": "browser",
   "panels": [
     {
       "id": 1,
       "type": "stat",
-      "title": "Questions answered",
+      "title": "Questions answered (total)",
       "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "thresholds" } }, "overrides": [] },
+      "fieldConfig": { "defaults": { "unit": "short", "decimals": 0 }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
       "targets": [
-        { "refId": "A", "expr": "sum(increase(pia_agent_queries_total[1h]))" }
+        { "refId": "A", "expr": "sum(pia_agent_queries_total)" }
       ]
     },
     {
       "id": 2,
       "type": "stat",
-      "title": "Refusal rate (1h)",
+      "title": "Refusal rate",
       "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
           "unit": "percentunit",
+          "decimals": 1,
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -39,22 +41,24 @@
           }
         }
       },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum(increase(pia_agent_queries_total{outcome=\"refused\"}[1h])) / clamp_min(sum(increase(pia_agent_queries_total[1h])), 1)"
+          "expr": "sum(pia_agent_refusals_total) / clamp_min(sum(pia_agent_queries_total), 1)"
         }
       ]
     },
     {
       "id": 3,
       "type": "stat",
-      "title": "$ spent (1h)",
+      "title": "$ spent (total)",
       "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "currencyUSD" } },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD", "decimals": 4 } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
       "targets": [
-        { "refId": "A", "expr": "sum(increase(pia_agent_cost_usd_total[1h]))" }
+        { "refId": "A", "expr": "sum(pia_agent_cost_usd_total)" }
       ]
     },
     {
@@ -63,24 +67,26 @@
       "title": "p95 latency (s)",
       "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "s" } },
+      "fieldConfig": { "defaults": { "unit": "s", "decimals": 2 } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false } },
       "targets": [
         {
           "refId": "A",
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(pia_agent_latency_seconds_bucket[5m])))"
+          "expr": "histogram_quantile(0.95, sum by (le) (pia_agent_latency_seconds_bucket))"
         }
       ]
     },
     {
       "id": 5,
       "type": "timeseries",
-      "title": "Queries per minute",
+      "title": "Cumulative queries by outcome",
       "gridPos": { "x": 0, "y": 4, "w": 12, "h": 7 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 15 } } },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (outcome) (rate(pia_agent_queries_total[1m]) * 60)",
+          "expr": "sum by (outcome) (pia_agent_queries_total)",
           "legendFormat": "{{outcome}}"
         }
       ]
@@ -88,13 +94,14 @@
     {
       "id": 6,
       "type": "timeseries",
-      "title": "Refusals by reason",
+      "title": "Refusals by reason (cumulative)",
       "gridPos": { "x": 12, "y": 4, "w": 12, "h": 7 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 15 } } },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (reason) (rate(pia_agent_refusals_total[1m]) * 60)",
+          "expr": "sum by (reason) (pia_agent_refusals_total)",
           "legendFormat": "{{reason}}"
         }
       ]
@@ -102,13 +109,14 @@
     {
       "id": 7,
       "type": "timeseries",
-      "title": "Tool calls by tool",
+      "title": "Tool calls by tool (cumulative)",
       "gridPos": { "x": 0, "y": 11, "w": 12, "h": 7 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 15 } } },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (tool) (rate(pia_agent_tool_calls_total[1m]) * 60)",
+          "expr": "sum by (tool) (pia_agent_tool_calls_total)",
           "legendFormat": "{{tool}}"
         }
       ]
@@ -116,13 +124,14 @@
     {
       "id": 8,
       "type": "timeseries",
-      "title": "Token flow (in / out)",
+      "title": "Tokens (cumulative in / out)",
       "gridPos": { "x": 12, "y": 11, "w": 12, "h": 7 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 15 } } },
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (direction) (rate(pia_agent_tokens_total[1m]))",
+          "expr": "sum by (direction) (pia_agent_tokens_total)",
           "legendFormat": "{{direction}}"
         }
       ]

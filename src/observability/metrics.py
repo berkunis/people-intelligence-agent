@@ -73,11 +73,26 @@ agent_tool_calls_per_query = Histogram(
 )
 
 def push_to_gateway() -> None:
-    """Push current registry to Pushgateway. Silent no-op if not configured."""
+    """Push current registry to Pushgateway. Silent no-op if not configured.
+
+    Each CLI invocation has fresh counters (starting at 0), so we give each push
+    a unique `instance` label. Without this, Pushgateway overwrites same-label
+    series and every aggregate shows "1". With it, Prometheus sums across
+    per-run series so cumulative panels work correctly.
+    """
     url = os.getenv("PIA_PUSHGATEWAY_URL", "http://localhost:9091")
     if not url:
         return
+    import time as _time
+    import uuid
+
+    instance = f"{int(_time.time() * 1000)}-{uuid.uuid4().hex[:8]}"
     try:
-        pushadd_to_gateway(url, job="pia-agent", registry=REGISTRY)
+        pushadd_to_gateway(
+            url,
+            job="pia-agent",
+            grouping_key={"instance": instance},
+            registry=REGISTRY,
+        )
     except Exception as e:  # noqa: BLE001
         logger.warning("pushgateway push failed (%s): %s", url, e)
