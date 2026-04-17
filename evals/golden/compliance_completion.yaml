@@ -1,0 +1,13 @@
+id: compliance_completion
+category: golden
+question: "What is the completion rate on compliance training?"
+role: ANALYST
+expected:
+  refused: false
+  must_tool_call: get_learning_completion
+  answer_must_include:
+    - compliance
+  sql_must_reference:
+    - docebo_completions
+  max_latency_ms: 30000
+  max_cost_usd: 0.50

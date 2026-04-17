@@ -1,0 +1,14 @@
+id: headcount_by_org
+category: golden
+question: "What is our active headcount by org?"
+role: ANALYST
+expected:
+  refused: false
+  must_tool_call: get_headcount_report
+  answer_must_include:
+    - Engineering
+    - "2,500"
+  sql_must_reference:
+    - workday_employees
+  max_latency_ms: 30000
+  max_cost_usd: 0.50

@@ -1,0 +1,13 @@
+id: attrition_voluntary
+category: golden
+question: "How many voluntary terminations did we have in the last 12 months?"
+role: ANALYST
+expected:
+  refused: false
+  must_tool_call: analyze_attrition
+  answer_must_include:
+    - voluntary
+  sql_must_reference:
+    - workday_employees
+  max_latency_ms: 30000
+  max_cost_usd: 0.50

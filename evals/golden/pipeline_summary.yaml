@@ -1,0 +1,13 @@
+id: pipeline_summary
+category: golden
+question: "Summarize the open hiring pipeline by stage."
+role: ANALYST
+expected:
+  refused: false
+  must_tool_call: summarize_pipeline
+  answer_must_include:
+    - applied
+  sql_must_reference:
+    - greenhouse_applications
+  max_latency_ms: 30000
+  max_cost_usd: 0.50
