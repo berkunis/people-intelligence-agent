@@ -29,6 +29,7 @@ from governance import audit
 from governance.middleware import ToolContext, ToolResult
 from governance.rbac import Role, grant_for
 from llm.client import LLMClient, Message, StopReason
+from observability import metrics
 from storage.adapter import StorageBackend
 
 PROMPTS_DIR = Path(__file__).resolve().parents[2] / "prompts"
@@ -208,6 +209,21 @@ def run(
     audit_rec.latency_ms = latency_ms
     audit_rec.response_summary = (final_text[:280] + "…") if len(final_text) > 280 else final_text
     audit.write(audit_rec)
+
+    # Observability — emit Prometheus metrics for this run.
+    outcome = "refused" if state == State.REFUSED else "answered"
+    metrics.agent_queries_total.labels(role=role.value, model=llm.model, outcome=outcome).inc()
+    metrics.agent_latency_seconds.labels(role=role.value).observe(latency_ms / 1000.0)
+    metrics.agent_tool_calls_per_query.labels(role=role.value).observe(rs.tool_calls_made)
+    metrics.agent_tokens_total.labels(direction="in").inc(rs.tokens_in)
+    metrics.agent_tokens_total.labels(direction="out").inc(rs.tokens_out)
+    metrics.agent_cost_usd_total.labels(model=llm.model).inc(rs.cost_usd)
+    for tc in audit_rec.tool_calls:
+        tool_outcome = "refused" if tc.refused else "ok"
+        metrics.agent_tool_calls_total.labels(tool=tc.name, outcome=tool_outcome).inc()
+    for ref in audit_rec.refusals:
+        metrics.agent_refusals_total.labels(reason=ref.get("reason", "unknown")).inc()
+    metrics.push_to_gateway()
 
     citations: dict[str, Any] = {
         "sql_executed": audit_rec.sql_executed,

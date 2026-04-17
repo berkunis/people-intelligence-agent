@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: pia-agent-pushgateway
+    honor_labels: true
+    static_configs:
+      - targets:
+          - pushgateway:9091
+        labels:
+          service: pia-agent
