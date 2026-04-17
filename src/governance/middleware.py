@@ -67,13 +67,16 @@ def governed(tool_name: str) -> Callable:
         def wrapper(ctx: ToolContext, *args: Any, **kwargs: Any) -> ToolResult:
             t0 = time.perf_counter()
 
+            # Scrub non-serializable args (the storage backend handle) before audit.
+            audit_args = {k: v for k, v in kwargs.items() if k != "backend"}
+
             # 1. RBAC
             if not rbac.can_invoke(ctx.role, tool_name):
                 reason = f"Role {ctx.role.value} cannot invoke tool {tool_name}"
                 ctx.audit_record.append_tool_call(
                     audit.ToolCallRecord(
                         name=tool_name,
-                        arguments=kwargs,
+                        arguments=audit_args,
                         refused=True,
                         refusal_reason="rbac",
                         latency_ms=0,
@@ -93,10 +96,18 @@ def governed(tool_name: str) -> Callable:
 
             # 4. k-anonymity (only for non-individual-level roles)
             grant = rbac.grant_for(ctx.role)
+            # If the tool returned row data under result.data["rows"], we can
+            # inspect per-group counts rather than just row-set size.
+            inspect_rows = None
+            if isinstance(result.data, dict):
+                rows_field = result.data.get("rows")
+                if isinstance(rows_field, list):
+                    inspect_rows = rows_field
             decision = k_anon.check(
                 result.row_count,
                 threshold=grant.k_anon_threshold,
                 allow_individual_rows=grant.allow_individual_rows,
+                rows=inspect_rows,
             )
             if not decision.allowed:
                 ctx.audit_record.refusals.append(
@@ -120,7 +131,7 @@ def governed(tool_name: str) -> Callable:
             ctx.audit_record.append_tool_call(
                 audit.ToolCallRecord(
                     name=tool_name,
-                    arguments=kwargs,
+                    arguments=audit_args,
                     row_count=result.row_count,
                     refused=result.refused,
                     refusal_reason=result.refusal_reason,

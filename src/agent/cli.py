@@ -24,7 +24,7 @@ from governance.rbac import Role
 from llm.factory import get_client
 from storage.factory import get_backend
 
-load_dotenv()
+load_dotenv(override=True)  # project .env wins over shell env for reproducibility
 
 app = typer.Typer(help="people-intelligence-agent CLI")
 console = Console()

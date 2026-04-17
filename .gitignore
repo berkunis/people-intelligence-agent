@@ -53,3 +53,6 @@ docs/walkthrough.md
 
 # Logs
 *.log
+
+# Audit log — contains actual prompts/questions, keep local
+data/audit/

@@ -64,8 +64,10 @@ class ClaudeClient(LLMClient):
             "system": system,
             "messages": api_messages,
             "max_tokens": max_tokens,
-            "temperature": temperature,
         }
+        # Opus 4.7 deprecated `temperature`; skip it for that family.
+        if not self.model.startswith("claude-opus-4-7"):
+            kwargs["temperature"] = temperature
         if api_tools:
             kwargs["tools"] = api_tools
 
