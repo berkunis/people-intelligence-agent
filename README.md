@@ -60,25 +60,29 @@ Grafana dashboard ([localhost:3000/d/pia-agent-overview](http://localhost:3000/d
 flowchart LR
     U[User question] --> AGENT
 
-    subgraph AGENT[Agent loop — typed state machine]
+    subgraph AGENT [Agent loop]
+        direction TB
         LLM[LLM abstraction<br/>Claude · Gemini]
-        TOOLS[Tools<br/>query_warehouse<br/>get_headcount_report<br/>analyze_attrition<br/>summarize_pipeline<br/>get_learning_completion]
+        TOOLS[5 tools<br/>query_warehouse<br/>get_headcount_report<br/>analyze_attrition<br/>summarize_pipeline<br/>get_learning_completion]
+        LLM --> TOOLS
     end
 
     AGENT --> GOV
 
-    subgraph GOV[Governance middleware<br/>enforced at every tool call]
+    subgraph GOV [Governance middleware]
+        direction TB
         RBAC[RBAC<br/>HRBP · Recruiter<br/>Leader · Analyst]
-        KANON[k-anonymity<br/>minimum group size]
+        KANON[k-anonymity<br/>min group size]
         PII[PII redaction<br/>names → IDs<br/>salaries → bands]
         VAL[SQL validator<br/>AST · allow-list<br/>no DDL/DML]
-        AUDIT[Audit log<br/>prompt hash · tools<br/>cost · latency]
+        AUDIT[Audit log<br/>prompt hash<br/>cost · latency]
         RBAC --> KANON --> PII --> VAL --> AUDIT
     end
 
     GOV --> STORE
 
-    subgraph STORE[Storage adapter]
+    subgraph STORE [Storage adapter]
+        direction TB
         DB1[(DuckDB<br/>local demo)]
         DB2[(BigQuery<br/>cloud path)]
     end
