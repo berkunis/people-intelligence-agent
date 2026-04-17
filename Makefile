@@ -1,8 +1,9 @@
-.PHONY: help install demo seed dbt-run evals evals-offline evals-nightly dashboards tf-plan lint typecheck test clean
+.PHONY: help install demo seed dbt-run evals evals-offline evals-nightly dashboards tf-plan lint typecheck test clean prep
 
 help:
 	@echo "people-intelligence-agent — make targets"
 	@echo ""
+	@echo "  prep            ★ RUN BEFORE INTERVIEW ★ starts stack + smoke-tests agent + opens Grafana"
 	@echo "  install         Install deps via uv (creates .venv)"
 	@echo "  seed            Generate synthetic data + load into DuckDB"
 	@echo "  dbt-run         Run dbt transformations"
@@ -15,6 +16,9 @@ help:
 	@echo "  typecheck       mypy strict on src/"
 	@echo "  test            pytest"
 	@echo "  clean           Remove build artifacts + warehouse"
+
+prep:
+	@bash bin/prep-demo.sh
 
 install:
 	uv sync --all-extras
